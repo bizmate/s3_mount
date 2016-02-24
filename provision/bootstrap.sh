@@ -28,9 +28,9 @@ if [[ ${#S3_KEY} -eq 0  || ${#S3_SECRET} -eq 0  || ${#S3_BUCKET} -eq 0 ]]; then
 fi
 
 
-
 #install required packages
-BASE_PACKAGES="build-essential libfuse-dev fuse-utils libxml2-dev mime-support automake libtool git libcurl4-openssl-dev"
+BASE_PACKAGES="build-essential libfuse-dev fuse-utils libxml2-dev mime-support automake libtool git \
+    libcurl4-openssl-dev vsftpd"
 
 # checks if any packages are missing
 dpkg -s $BASE_PACKAGES > /dev/null
@@ -45,6 +45,7 @@ fi
 
 # install s3fs
 if [ ! -f /usr/bin/s3fs ]; then
+    echo "installing s3fs "
     cd ~
     /usr/bin/git clone https://github.com/s3fs-fuse/s3fs-fuse
     cd s3fs-fuse/
@@ -52,6 +53,8 @@ if [ ! -f /usr/bin/s3fs ]; then
     ./configure --prefix=/usr --with-openssl # See (*1)
     make
     sudo make install
+else
+    echo "s3fs already installed"
 fi
 
 # add auth information for S3 with correct permissions
@@ -73,3 +76,17 @@ if [ $? -ne 0 ]; then
 else
     echo "Mountpoint /s3mnt already set up"
 fi
+
+/bin/mountpoint /home/vagrant/ftpfiles > /dev/null
+# ftp folder mount
+if [[ ! -d /home/vagrant/ftpfiles || $? -ne 0 ]]; then
+    echo "Setting up ftpmount folders"
+    sudo mkdir -p /home/vagrant/ftpfiles
+    mount --bind /s3mnt /home/vagrant/ftpfiles
+else
+    echo "ftpmount folders already setup"
+fi
+
+# Make sure FTP config is added
+sudo cp -f /tmp/vagrant/provision/vsftpd.conf /etc/
+sudo service vsftpd restart

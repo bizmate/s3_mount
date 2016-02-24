@@ -10,6 +10,6 @@ Example repository to show how to install S3FU - Fuse and configure a S3 mountpo
    AWS_S3_BUCKET=myAwsS3BucketName
    export AWS_S3_ACCESS_KEY
    export AWS_S3_ACCESS_SECRET
-   export AWS_S3_ACCESS_BUCKET
+   export AWS_S3_BUCKET
    ```
    
