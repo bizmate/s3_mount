@@ -22,7 +22,12 @@ S3_BUCKET=$(argValue AWS_S3_BUCKET)
 
 echo "S3 mount provisioning running in : $CSDIR with KEY $S3_KEY SECRET $S3_SECRET on Bucket $S3_BUCKET"
 
-exit
+if [[ ${#S3_KEY} -eq 0  || ${#S3_SECRET} -eq 0  || ${#S3_BUCKET} -eq 0 ]]; then
+    echo "Please set up the access environment variables as described in README"
+    exit
+fi
+
+
 
 #install required packages
 BASE_PACKAGES="build-essential libfuse-dev fuse-utils libxml2-dev mime-support automake libtool git libcurl4-openssl-dev"
@@ -38,11 +43,33 @@ else
     echo "Packages : $BASE_PACKAGES already installed"
 fi
 
-# Preparing S3  folders
-sudo mkdir -p /s3mnt
-sudo mkdir -p /tmp/cache
-sudo chmod 777 /tmp/cache /s3mnt
+# install s3fs
+if [ ! -f /usr/bin/s3fs ]; then
+    cd ~
+    /usr/bin/git clone https://github.com/s3fs-fuse/s3fs-fuse
+    cd s3fs-fuse/
+    ./autogen.sh
+    ./configure --prefix=/usr --with-openssl # See (*1)
+    make
+    sudo make install
+fi
 
-# Unmount `sudo fusermount -u /s3mnt/`
-# Mounting S3 resouce
-s3fs -o use_cache=/tmp/cache waspdocstore /s3mnt
+# add auth information for S3 with correct permissions
+echo $S3_KEY:$S3_SECRET > ~/.passwd-s3fs
+chmod 600 ~/.passwd-s3fs
+
+/bin/mountpoint /s3mnt > /dev/null
+
+if [ $? -ne 0 ]; then
+    # Preparing S3  folders
+    sudo mkdir -p /s3mnt
+    sudo mkdir -p /tmp/cache
+    sudo chmod 777 /tmp/cache /s3mnt
+
+    # Unmount `sudo fusermount -u /s3mnt/`
+    # Mounting S3 resouce
+    s3fs -o use_cache=/tmp/cache $S3_BUCKET /s3mnt
+    echo "Mounted on /s3mnt"
+else
+    echo "Mountpoint /s3mnt already set up"
+fi
