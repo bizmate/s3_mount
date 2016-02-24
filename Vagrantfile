@@ -23,8 +23,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     config.ssh.forward_agent = true
     config.vm.synced_folder "./", "/tmp/vagrant"
 
-    puts "Running S3 mount install with provider: #{provider}"
+    awsS3Key = ENV["AWS_S3_ACCESS_KEY"]
+    awsS3Secret = ENV["AWS_S3_ACCESS_SECRET"]
+    awsS3Bucket = ENV["AWS_S3_BUCKET"]
 
+    puts "Running S3 mount install with provider: #{provider} KEY #{awsS3Key} SECRET #{awsS3Secret} on  Bucket #{awsS3Bucket}"
     config.vm.provision "shell",
-        inline: "/bin/bash /tmp/vagrant/provision/bootstrap.sh AWS_S3_KEY=MyKey AWS_S3_SECRET=MySecret AWS_S3_BUCKET=MyBucket"
+        inline: "/bin/bash /tmp/vagrant/provision/bootstrap.sh AWS_S3_KEY=#{awsS3Key} AWS_S3_SECRET=#{awsS3Secret} AWS_S3_BUCKET=#{awsS3Bucket}"
 end

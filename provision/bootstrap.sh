@@ -20,13 +20,14 @@ S3_KEY=$(argValue AWS_S3_KEY)
 S3_SECRET=$(argValue AWS_S3_SECRET)
 S3_BUCKET=$(argValue AWS_S3_BUCKET)
 
-echo "S3 mount provisioning running in : $CSDIR with KEY $S3_KEY SECRET $S3_SECRET"
+echo "S3 mount provisioning running in : $CSDIR with KEY $S3_KEY SECRET $S3_SECRET on Bucket $S3_BUCKET"
 
 exit
 
 #install required packages
 BASE_PACKAGES="build-essential libfuse-dev fuse-utils libxml2-dev mime-support automake libtool git libcurl4-openssl-dev"
 
+# checks if any packages are missing
 dpkg -s $BASE_PACKAGES > /dev/null
 
 if [ $? -ne 0 ]; then
@@ -38,7 +39,9 @@ else
 fi
 
 # Preparing S3  folders
-mkdir
+sudo mkdir -p /s3mnt
+sudo mkdir -p /tmp/cache
+sudo chmod 777 /tmp/cache /s3mnt
 
 # Unmount `sudo fusermount -u /s3mnt/`
 # Mounting S3 resouce
