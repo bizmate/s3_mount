@@ -18,10 +18,30 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     # Use image ubuntu 12.04 LTS
     config.vm.box = "ubuntu/precise64"
 
-    config.vm.hostname = "Dev-S3Mount"
-    config.vm.network :private_network, ip: "192.168.53.70"
-    config.ssh.forward_agent = true
-    config.vm.synced_folder "./", "/tmp/vagrant"
+    puts "Running install with provider: #{provider} "
+
+    if provider == "digital_ocean"
+        config.vm.provider :aws do |aws, override|
+            aws.access_key_id = ENV["AWS_S3_ACCESS_KEY"]
+            aws.secret_access_key = ENV["AWS_S3_ACCESS_SECRET"]
+            aws.session_token = ENV["AWS_SESSION TOKEN"]
+            aws.keypair_name = ENV["AWS_KEYPAIR_NAME"]
+            aws.ami = ENV["AWS_AMI"]
+            aws.security_groups = ENV["AWS_SECURITY_GROUP"]
+
+            aws.instance_type = "t1.micro"
+            aws.region = "eu-west-1"
+
+            override.ssh.username = "ubuntu"
+            override.ssh.private_key_path = ENV["AWS_SSH_PRIVATE_KEY_PATH"]
+        end
+
+    else
+        config.vm.hostname = "Dev-S3Mount"
+        config.vm.network :private_network, ip: "192.168.53.70"
+        config.ssh.forward_agent = true
+        config.vm.synced_folder "./", "/tmp/vagrant"
+    end
 
     awsS3Key = ENV["AWS_S3_ACCESS_KEY"]
     awsS3Secret = ENV["AWS_S3_ACCESS_SECRET"]
