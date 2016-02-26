@@ -58,8 +58,14 @@ else
 fi
 
 # add auth information for S3 with correct permissions
-echo $S3_KEY:$S3_SECRET > ~/.passwd-s3fs
+echo "Adding keys $S3_KEY:$S3_SECRET"
+echo "$S3_KEY:$S3_SECRET" > ~/.passwd-s3fs
 chmod 600 ~/.passwd-s3fs
+
+if [ ! -f  ~/.passwd-s3fs ]; then
+    echo "S3 password file not created ERROR"
+    exit 1
+fi
 
 /bin/mountpoint /s3mnt > /dev/null
 
@@ -71,7 +77,7 @@ if [ $? -ne 0 ]; then
 
     # Unmount `sudo fusermount -u /s3mnt/`
     # Mounting S3 resouce
-    s3fs -o use_cache=/tmp/cache $S3_BUCKET /s3mnt
+    s3fs -o use_cache=/tmp/cache -o use_rrs -o allow_other $S3_BUCKET /s3mnt
     echo "Mounted on /s3mnt"
 else
     echo "Mountpoint /s3mnt already set up"
@@ -81,7 +87,7 @@ fi
 # ftp folder mount
 if [[ ! -d /home/vagrant/ftpfiles || $? -ne 0 ]]; then
     echo "Setting up ftpmount folders"
-    sudo mkdir -p /home/vagrant/ftpfiles
+    mkdir -p /home/vagrant/ftpfiles
     mount --bind /s3mnt /home/vagrant/ftpfiles
 else
     echo "ftpmount folders already setup"
